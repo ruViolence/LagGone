@@ -1,0 +1,4 @@
+name: LagGone
+main: ru.violence.laggone.LagGonePlugin
+version: 1.0.0
+softdepend: [FastAsyncWorldEdit]

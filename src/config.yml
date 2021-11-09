@@ -1,0 +1,30 @@
+entity-section-limiter:
+  limit-per-section: 128
+  ignore-named: true
+  ignore-tamed: true
+  ignored-entity:
+    - VILLAGER
+    - IRON_GOLEM
+    - SNOWMAN
+    - PAINTING
+    - ITEM_FRAME
+    - PRIMED_TNT
+    - FALLING_BLOCK
+    - ARMOR_STAND
+    - MINECART_CHEST
+    - MINECART_HOPPER
+  custom-limits:
+    minecarts:
+      entity:
+        - MINECART
+        - MINECART_CHEST
+        - MINECART_HOPPER
+      limit-section: 5
+      limit-chunk: 15
+global-redstone-limiter:
+  enabled: true
+  tick-length: 5
+  limit: 1024
+delete-empty-chunk-sections: true
+prevent-entity-portal:
+  - SNOWBALL
