@@ -217,7 +217,7 @@ public class EntitySectionLimiter implements Listener {
 
         // Check sections and delete overload section entities
         for (List<Entity> slice : sectionEntities) {
-            if (slice.size() < this.limitPerSection) continue;
+            if (!isAboveSectionLimit(slice.size())) continue;
 
             final int toRemove = slice.size() - this.limitPerSection;
             int removed = 0;
@@ -237,7 +237,7 @@ public class EntitySectionLimiter implements Listener {
         List<Entity> sectionEntities = Utils.getChunkSectionEntities(world.getChunkAt(chunkX, chunkZ), chunkY);
 
         // Full limit
-        if (sectionEntities.stream().filter(ent -> !isSensitiveEntity(ent)).count() > this.limitPerSection) {
+        if (isAboveSectionLimit((int) sectionEntities.stream().filter(ent -> !isSensitiveEntity(ent)).count())) {
             return true;
         }
 
@@ -274,6 +274,10 @@ public class EntitySectionLimiter implements Listener {
         }
 
         return false;
+    }
+
+    private boolean isAboveSectionLimit(int count) {
+        return 0 < this.limitPerSection && this.limitPerSection < count;
     }
 
     private CustomLimit[] getCustomLimit(EntityType type) {
