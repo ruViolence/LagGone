@@ -38,6 +38,7 @@ public class EntitySectionLimiter implements Listener {
     private final Set<EntityType> ignoredEntities = EnumSet.noneOf(EntityType.class);
     private final List<CustomLimit> customLimits = new ArrayList<>();
     private final Map<EntityType, CustomLimit[]> limitsByEntityType = Maps.newEnumMap(EntityType.class);
+    private final CustomLimit[] emptyCustomLimits = new CustomLimit[0];
 
     public EntitySectionLimiter(LagGonePlugin plugin) {
         ConfigurationSection customLimitsSect = plugin.getConfig().getConfigurationSection("entity-section-limiter.custom-limits");
@@ -102,9 +103,6 @@ public class EntitySectionLimiter implements Listener {
 
         for (Map.Entry<EntityType, List<CustomLimit>> entry : map.entrySet()) {
             this.limitsByEntityType.put(entry.getKey(), entry.getValue().toArray(new CustomLimit[0]));
-        }
-        for (EntityType entityType : EntityType.values()) {
-            this.limitsByEntityType.computeIfAbsent(entityType, type -> new CustomLimit[0]);
         }
 
         if (this.limitPerSection > 0 || !this.customLimits.isEmpty()) {
@@ -281,7 +279,7 @@ public class EntitySectionLimiter implements Listener {
     }
 
     private CustomLimit[] getCustomLimit(EntityType type) {
-        return this.limitsByEntityType.get(type);
+        return this.limitsByEntityType.getOrDefault(type, emptyCustomLimits);
     }
 
     private void resetCustomLimits() {
