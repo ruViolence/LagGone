@@ -175,18 +175,6 @@ public class EntitySectionLimiter implements Listener {
         }
     }
 
-    private boolean isShouldBeCancelled(Entity entity) {
-        return isShouldBeCancelled(entity, entity.getLocation());
-    }
-
-    private boolean isShouldBeCancelled(Entity entity, Location location) {
-        int newChunkX = MathHelper.floor(location.getX() / 16);
-        int newChunkY = MathHelper.floor(Utils.clamp((int) (location.getY() / 16), 0, 15));
-        int newChunkZ = MathHelper.floor(location.getZ() / 16);
-
-        return isLimited(entity, location.getWorld(), newChunkX, newChunkY, newChunkZ);
-    }
-
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onEntityMove(EntityMoveEvent event) {
         if (!event.isPerBlockMove()) return;
@@ -202,7 +190,7 @@ public class EntitySectionLimiter implements Listener {
         // Skip if it's not a per chunk section move
         if (oldChunkX == newChunkX && oldChunkY == newChunkY && oldChunkZ == newChunkZ) return;
 
-        if (isLimited(event.getEntity(), event.getWorld(), newChunkX, newChunkY, newChunkZ)) {
+        if (isShouldBeCancelled(event.getEntity(), event.getWorld(), newChunkX, newChunkY, newChunkZ)) {
             event.getEntity().remove();
         }
     }
@@ -231,43 +219,41 @@ public class EntitySectionLimiter implements Listener {
         }
     }
 
+    private boolean isShouldBeCancelled(Entity entity) {
+        return isShouldBeCancelled(entity, entity.getLocation());
+    }
+
+    private boolean isShouldBeCancelled(Entity entity, Location location) {
+        int chunkX = MathHelper.floor(location.getX() / 16);
+        int chunkY = MathHelper.floor(Utils.clamp((int) (location.getY() / 16), 0, 15));
+        int chunkZ = MathHelper.floor(location.getZ() / 16);
+
+        return isLimited(entity, location.getWorld(), chunkX, chunkY, chunkZ);
+    }
+
+    private boolean isShouldBeCancelled(Entity entity, World world, int chunkX, int chunkY, int chunkZ) {
+        return isLimited(entity, world, chunkX, chunkY, chunkZ);
+    }
+
     private boolean isLimited(Entity entity, World world, int chunkX, int chunkY, int chunkZ) {
-        List<Entity> sectionEntities = Utils.getChunkSectionEntities(world.getChunkAt(chunkX, chunkZ), chunkY);
+        List<Entity>[] sectionEntities = Utils.getChunkSectionEntities(world.getChunkAt(chunkX, chunkZ));
 
         // Full limit
-        if (isAboveSectionLimit((int) sectionEntities.stream().filter(ent -> !isSensitiveEntity(ent)).count())) {
-            return true;
+        int sectionEntitiesCount = 0;
+        for (Entity other : sectionEntities[chunkY]) {
+            if (isSensitiveEntity(other)) continue;
+            if (isAboveSectionLimit(++sectionEntitiesCount)) return true;
         }
 
         resetCustomLimits();
 
-        // Count checking entity
-        for (CustomLimit limit : getCustomLimit(entity.getType())) {
-            if (limit.countSectionLimit()) return true;
-        }
-
-        // Count other slice entities
-        for (Entity ent : sectionEntities) {
-            // Skip checking entity
-            if (ent == entity) continue;
-
-            for (CustomLimit limit : getCustomLimit(ent.getType())) {
-                if (limit.countSectionLimit()) return true;
-            }
-        }
-
-        // Count chunks for checking entity
-        for (CustomLimit limit : getCustomLimit(entity.getType())) {
-            if (limit.countChunkLimit()) return true;
-        }
-
-        // Count other chunk entities
-        for (Entity ent : world.getChunkAt(chunkX, chunkZ).getEntities()) {
-            // Skip checking entity
-            if (ent == entity) continue;
-
-            for (CustomLimit limit : getCustomLimit(ent.getType())) {
-                if (limit.countChunkLimit()) return true;
+        // Count custom limits
+        for (int si = 0; si < sectionEntities.length; si++) {
+            for (Entity other : sectionEntities[si]) {
+                for (CustomLimit limit : getCustomLimit(other.getType())) {
+                    if (si == chunkY && limit.countSectionLimit()) return true;
+                    if (limit.countChunkLimit()) return true;
+                }
             }
         }
 
