@@ -63,6 +63,7 @@ public class EntitySectionLimiter implements Listener {
 
                 if (entityTypes.isEmpty()) throw new IllegalStateException("Entity types is empty");
 
+                boolean exclusive = keySect.getBoolean("exclusive");
                 int limitSection = keySect.getInt("limit-section", 0);
                 int limitChunk = keySect.getInt("limit-chunk", 0);
 
@@ -73,7 +74,7 @@ public class EntitySectionLimiter implements Listener {
                 if (limitSection < 0) limitSection = 0;
                 if (limitChunk < 0) limitChunk = 0;
 
-                this.customLimits.add(new CustomLimit(entityTypes.toArray(new EntityType[0]), limitSection, limitChunk));
+                this.customLimits.add(new CustomLimit(entityTypes.toArray(new EntityType[0]), exclusive, limitSection, limitChunk));
             } catch (Exception e) {
                 plugin.getLogger().severe("Failed while loading custom limit named " + key);
                 e.printStackTrace();
@@ -251,6 +252,7 @@ public class EntitySectionLimiter implements Listener {
         for (int si = 0; si < sectionEntities.length; si++) {
             for (Entity other : sectionEntities[si]) {
                 for (CustomLimit limit : getCustomLimit(other.getType())) {
+                    if (limit.isExclusive() && other.getType() != entity.getType()) continue;
                     if (si == chunkY && limit.countSectionLimit()) return true;
                     if (limit.countChunkLimit()) return true;
                 }

@@ -19,6 +19,7 @@ entity-section-limiter:
         - MINECART
         - MINECART_CHEST
         - MINECART_HOPPER
+      exclusive: false
       limit-section: 5
       limit-chunk: 15
 global-redstone-limiter:

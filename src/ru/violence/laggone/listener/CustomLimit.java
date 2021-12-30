@@ -9,11 +9,13 @@ public class CustomLimit {
     private final @Getter EntityType[] entityTypes;
     private final @Getter int limitSection;
     private final @Getter int limitChunk;
+    private final @Getter boolean exclusive;
     private int sectionCount = 0;
     private int chunkCount = 0;
 
-    public CustomLimit(EntityType[] entityTypes, int limitSection, int limitChunk) {
+    public CustomLimit(EntityType[] entityTypes, boolean exclusive, int limitSection, int limitChunk) {
         this.entityTypes = entityTypes;
+        this.exclusive = exclusive;
         this.limitSection = limitSection;
         this.limitChunk = limitChunk;
     }
