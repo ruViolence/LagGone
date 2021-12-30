@@ -52,4 +52,15 @@ public class Utils {
 
         return entities;
     }
+
+    @SuppressWarnings("ManualMinMaxCalculation")
+    public int clamp(int input, int min, int max) {
+        if (input < min) {
+            return min;
+        } else if (input > max) {
+            return max;
+        } else {
+            return input;
+        }
+    }
 }

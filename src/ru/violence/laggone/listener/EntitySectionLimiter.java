@@ -183,7 +183,7 @@ public class EntitySectionLimiter implements Listener {
 
     private boolean isShouldBeCancelled(Entity entity, Location location) {
         int newChunkX = MathHelper.floor(location.getX() / 16);
-        int newChunkY = MathHelper.floor(location.getY() / 16);
+        int newChunkY = MathHelper.floor(Utils.clamp((int) (location.getY() / 16), 0, 15));
         int newChunkZ = MathHelper.floor(location.getZ() / 16);
 
         return isLimited(entity, location.getWorld(), newChunkX, newChunkY, newChunkZ);
@@ -194,14 +194,11 @@ public class EntitySectionLimiter implements Listener {
         if (!event.isPerBlockMove()) return;
         if (isSensitiveEntity(event.getEntity())) return;
 
-        // Skip if the entity is outside of world
-        if (event.getNewY() < 0 || 256 <= event.getNewY()) return;
-
         int oldChunkX = MathHelper.floor(event.getOldX() / 16);
-        int oldChunkY = MathHelper.floor(event.getOldY() / 16);
+        int oldChunkY = MathHelper.floor(Utils.clamp((int) (event.getOldY() / 16), 0, 15));
         int oldChunkZ = MathHelper.floor(event.getOldZ() / 16);
         int newChunkX = MathHelper.floor(event.getNewX() / 16);
-        int newChunkY = MathHelper.floor(event.getNewY() / 16);
+        int newChunkY = MathHelper.floor(Utils.clamp((int) (event.getNewY() / 16), 0, 15));
         int newChunkZ = MathHelper.floor(event.getNewZ() / 16);
 
         // Skip if it's not a per chunk section move
