@@ -22,6 +22,13 @@ entity-section-limiter:
       exclusive: false
       limit-section: 5
       limit-chunk: 15
+entity-tick-limiter:
+  enabled: true
+  delay-ticks: 3
+  entity-types:
+    - ARMOR_STAND
+    - PAINTING
+    - ITEM_FRAME
 global-redstone-limiter:
   enabled: true
   tick-length: 5
