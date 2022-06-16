@@ -1,5 +1,7 @@
 package ru.violence.laggone.listener;
 
+import com.github.ruviolence.reaper.event.entity.AnyEntitySpawnEvent;
+import com.github.ruviolence.reaper.event.entity.EntityMoveEvent;
 import com.google.common.collect.Maps;
 import net.minecraft.server.v1_12_R1.MathHelper;
 import org.bukkit.Bukkit;
@@ -20,8 +22,6 @@ import org.bukkit.event.vehicle.VehicleCreateEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import ru.violence.laggone.LagGonePlugin;
 import ru.violence.laggone.util.Utils;
-import x.reaper.event.entity.AnyEntitySpawnEvent;
-import x.reaper.event.entity.EntityMoveEvent;
 
 import java.util.ArrayList;
 import java.util.EnumSet;

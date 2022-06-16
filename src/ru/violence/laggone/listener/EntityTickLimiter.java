@@ -1,11 +1,11 @@
 package ru.violence.laggone.listener;
 
+import com.github.ruviolence.reaper.event.entity.EntityTickEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import ru.violence.laggone.LagGonePlugin;
-import x.reaper.event.entity.EntityTickEvent;
 
 import java.util.EnumSet;
 import java.util.Locale;
