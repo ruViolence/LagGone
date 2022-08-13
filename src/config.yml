@@ -36,3 +36,7 @@ global-redstone-limiter:
 delete-empty-chunk-sections: true
 prevent-entity-portal:
   - SNOWBALL
+tile-entity-limiter:
+  enabled: true
+  limit: 128
+  period: 1200
