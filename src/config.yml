@@ -24,7 +24,7 @@ entity-section-limiter:
       limit-chunk: 15
 entity-tick-limiter:
   enabled: true
-  delay-ticks: 3
+  skip-period: 3
   entity-types:
     - ARMOR_STAND
     - PAINTING
