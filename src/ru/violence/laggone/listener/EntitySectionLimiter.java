@@ -283,7 +283,6 @@ public class EntitySectionLimiter implements Listener {
 
             case ENDER_DRAGON: // Skip bosses
             case COMPLEX_PART:
-            case ELDER_GUARDIAN:
 
             case ARROW: // Skip arrows
             case TIPPED_ARROW:

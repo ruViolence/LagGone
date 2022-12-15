@@ -3,6 +3,7 @@ entity-section-limiter:
   ignore-named: true
   ignore-tamed: true
   ignored-entity:
+    - ELDER_GUARDIAN
     - VILLAGER
     - IRON_GOLEM
     - SNOWMAN
