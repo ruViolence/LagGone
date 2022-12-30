@@ -39,5 +39,6 @@ prevent-entity-portal:
   - SNOWBALL
 tile-entity-limiter:
   enabled: true
+  notify-block-remove: true
   limit: 128
   period: 1200
