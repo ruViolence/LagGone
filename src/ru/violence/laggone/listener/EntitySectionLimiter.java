@@ -82,8 +82,8 @@ public class EntitySectionLimiter implements Listener {
         }
 
         this.limitPerSection = plugin.getConfig().getInt("entity-section-limiter.limit-per-section", 128);
-        this.ignoreNamed = plugin.getConfig().getBoolean("entity-section-limiter.ignored-named", true);
-        this.ignoreTamed = plugin.getConfig().getBoolean("entity-section-limiter.ignored-tamed", true);
+        this.ignoreNamed = plugin.getConfig().getBoolean("entity-section-limiter.ignore-named", true);
+        this.ignoreTamed = plugin.getConfig().getBoolean("entity-section-limiter.ignore-tamed", true);
 
         for (String entityTypeS : plugin.getConfig().getStringList("entity-section-limiter.ignored-entity")) {
             try {
