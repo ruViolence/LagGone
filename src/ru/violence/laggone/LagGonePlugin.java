@@ -7,7 +7,7 @@ import ru.violence.laggone.listener.EntityTickLimiter;
 import ru.violence.laggone.listener.FaweTabCompleteCrash;
 import ru.violence.laggone.listener.GlobalRedstoneLimiter;
 import ru.violence.laggone.listener.PreventEntityPortal;
-import ru.violence.laggone.listener.TileEntityLimitTask;
+import ru.violence.laggone.listener.TileEntityLimiter;
 
 public class LagGonePlugin extends JavaPlugin {
     @Override
@@ -17,7 +17,7 @@ public class LagGonePlugin extends JavaPlugin {
         new EntityTickLimiter(this);
         new GlobalRedstoneLimiter(this);
         new EmptyChunkSectionDeleter(this);
-        new TileEntityLimitTask(this);
+        new TileEntityLimiter(this);
         new PreventEntityPortal(this);
         new FaweTabCompleteCrash(this);
     }
