@@ -2,6 +2,7 @@ package ru.violence.laggone.listener;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
+import org.bukkit.Material;
 import org.bukkit.block.BlockState;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -12,16 +13,13 @@ import ru.violence.laggone.LagGonePlugin;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class TileEntityLimiter implements Listener {
     private final LagGonePlugin plugin;
-    private final boolean notifyBlockRemove;
     private final int limit;
 
     public TileEntityLimiter(LagGonePlugin plugin) {
         this.plugin = plugin;
-        this.notifyBlockRemove = plugin.getConfig().getBoolean("tile-entity-limiter.notify-block-remove");
         this.limit = plugin.getConfig().getInt("tile-entity-limiter.limit");
         if (plugin.getConfig().getBoolean("tile-entity-limiter.enabled")) {
             Bukkit.getPluginManager().registerEvents(this, plugin);
@@ -44,7 +42,7 @@ public class TileEntityLimiter implements Listener {
 
         for (int i = 0; i < toDelete; i++) {
             BlockState tileEntity = tileEntities[i];
-            tileEntity.getBlock().setTypeIdAndData(0, (byte) 0, false, notifyBlockRemove, true);
+            tileEntity.getBlock().setType(Material.AIR, false);
         }
 
         plugin.getLogger().warning("Deleted " + toDelete + " tile entities from chunk " + chunk.getWorld().getName() + " " + chunk.getX() + " " + chunk.getZ());
@@ -68,7 +66,7 @@ public class TileEntityLimiter implements Listener {
             List<Chunk> chunks = Bukkit.getWorlds()
                     .stream()
                     .flatMap(world -> Arrays.stream(world.getLoadedChunks()))
-                    .collect(Collectors.toList());
+                    .toList();
 
             new BukkitRunnable() {
                 int index = 0;

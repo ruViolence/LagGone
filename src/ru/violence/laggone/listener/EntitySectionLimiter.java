@@ -1,9 +1,7 @@
 package ru.violence.laggone.listener;
 
-import com.github.ruviolence.reaper.event.entity.AnyEntitySpawnEvent;
-import com.github.ruviolence.reaper.event.entity.EntityMoveEvent;
 import com.google.common.collect.Maps;
-import net.minecraft.server.v1_12_R1.MathHelper;
+import io.papermc.paper.event.entity.EntityMoveEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -35,6 +33,7 @@ public class EntitySectionLimiter implements Listener {
     private final int limitPerSection;
     private final boolean ignoreNamed;
     private final boolean ignoreTamed;
+    private final int removeStrategy;
     private final Set<EntityType> ignoredEntities = EnumSet.noneOf(EntityType.class);
     private final List<CustomLimit> customLimits = new ArrayList<>();
     private final Map<EntityType, CustomLimit[]> limitsByEntityType = Maps.newEnumMap(EntityType.class);
@@ -84,6 +83,7 @@ public class EntitySectionLimiter implements Listener {
         this.limitPerSection = plugin.getConfig().getInt("entity-section-limiter.limit-per-section", 128);
         this.ignoreNamed = plugin.getConfig().getBoolean("entity-section-limiter.ignore-named", true);
         this.ignoreTamed = plugin.getConfig().getBoolean("entity-section-limiter.ignore-tamed", true);
+        this.removeStrategy = plugin.getConfig().getInt("entity-section-limiter.remove-strategy", 0);
 
         for (String entityTypeS : plugin.getConfig().getStringList("entity-section-limiter.ignored-entity")) {
             try {
@@ -143,17 +143,6 @@ public class EntitySectionLimiter implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
-    public void onAnyEntitySpawn(AnyEntitySpawnEvent event) {
-        if (event.getSpawnReason() == CreatureSpawnEvent.SpawnReason.CUSTOM) return;
-        if (isSensitiveEntity(event.getEntity())) return;
-
-        if (isShouldBeCancelled(event.getEntity(), event.getLocation())) {
-            event.setCancelled(true);
-            event.getEntity().remove();
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onEntityTeleport(EntityTeleportEvent event) {
         if (isSensitiveEntity(event.getEntity())) return;
 
@@ -178,32 +167,40 @@ public class EntitySectionLimiter implements Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onEntityMove(EntityMoveEvent event) {
-        if (!event.isPerBlockMove()) return;
+        if (!event.hasExplicitlyChangedBlock()) return;
         if (isSensitiveEntity(event.getEntity())) return;
 
-        int oldChunkX = MathHelper.floor(event.getOldX() / 16);
-        int oldChunkY = MathHelper.floor(Utils.clamp((int) (event.getOldY() / 16), 0, 15));
-        int oldChunkZ = MathHelper.floor(event.getOldZ() / 16);
-        int newChunkX = MathHelper.floor(event.getNewX() / 16);
-        int newChunkY = MathHelper.floor(Utils.clamp((int) (event.getNewY() / 16), 0, 15));
-        int newChunkZ = MathHelper.floor(event.getNewZ() / 16);
+        Location from = event.getFrom();
+        Location to = event.getTo();
+
+        int oldChunkX = Utils.floor(from.getX() / 16);
+        int oldChunkY = Utils.floor(from.getY() / 16);
+        int oldChunkZ = Utils.floor(from.getZ() / 16);
+        int newChunkX = Utils.floor(to.getX() / 16);
+        int newChunkY = Utils.floor(to.getY() / 16);
+        int newChunkZ = Utils.floor(to.getZ() / 16);
 
         // Skip if it's not a per chunk section move
         if (oldChunkX == newChunkX && oldChunkY == newChunkY && oldChunkZ == newChunkZ) return;
 
-        if (isShouldBeCancelled(event.getEntity(), event.getWorld(), newChunkX, newChunkY, newChunkZ)) {
-            event.getEntity().remove();
+        if (isShouldBeCancelled(event.getEntity(), to.getWorld(), newChunkX, newChunkY, newChunkZ)) {
+            event.setCancelled(true);
+            if (removeStrategy == 1) {
+                event.getEntity().damage(1000);
+            } else {
+                event.getEntity().remove();
+            }
         }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onChunkUnload(ChunkUnloadEvent event) {
-        List<Entity>[] sectionEntities = Utils.getChunkSectionEntities(event.getChunk());
+        Map<Integer, List<Entity>> sectionEntities = Utils.getChunkSectionEntities(event.getChunk());
 
         // TODO: Count the custom limits
 
         // Check sections and delete overload section entities
-        for (List<Entity> slice : sectionEntities) {
+        for (List<Entity> slice : sectionEntities.values()) {
             if (!isAboveSectionLimit(slice.size())) continue;
 
             final int toRemove = slice.size() - this.limitPerSection;
@@ -225,9 +222,9 @@ public class EntitySectionLimiter implements Listener {
     }
 
     private boolean isShouldBeCancelled(Entity entity, Location location) {
-        int chunkX = MathHelper.floor(location.getX() / 16);
-        int chunkY = MathHelper.floor(Utils.clamp((int) (location.getY() / 16), 0, 15));
-        int chunkZ = MathHelper.floor(location.getZ() / 16);
+        int chunkX = Utils.floor(location.getX() / 16);
+        int chunkY = Utils.floor(location.getY() / 16);
+        int chunkZ = Utils.floor(location.getZ() / 16);
 
         return isLimited(entity, location.getWorld(), chunkX, chunkY, chunkZ);
     }
@@ -237,24 +234,30 @@ public class EntitySectionLimiter implements Listener {
     }
 
     private boolean isLimited(Entity entity, World world, int chunkX, int chunkY, int chunkZ) {
-        List<Entity>[] sectionEntities = Utils.getChunkSectionEntities(world.getChunkAt(chunkX, chunkZ));
+        Map<Integer, List<Entity>> sectionEntities = Utils.getChunkSectionEntities(world.getChunkAt(chunkX, chunkZ));
 
         // Full limit
-        int sectionEntitiesCount = 0;
-        for (Entity other : sectionEntities[chunkY]) {
-            if (isSensitiveEntity(other)) continue;
-            if (isAboveSectionLimit(++sectionEntitiesCount)) return true;
+        List<Entity> entities = sectionEntities.get(chunkY);
+        if (entities != null) {
+            int sectionEntitiesCount = 0;
+            for (Entity other : entities) {
+                if (isSensitiveEntity(other)) continue;
+                if (isAboveSectionLimit(++sectionEntitiesCount)) return true;
+            }
         }
 
         resetCustomLimits();
 
         // Count custom limits
-        for (int si = 0; si < sectionEntities.length; si++) {
-            for (Entity other : sectionEntities[si]) {
-                for (CustomLimit limit : getCustomLimit(other.getType())) {
-                    if (limit.isExclusive() && other.getType() != entity.getType()) continue;
-                    if (si == chunkY && limit.countSectionLimit()) return true;
-                    if (limit.countChunkLimit()) return true;
+        for (Map.Entry<Integer, List<Entity>> entry : sectionEntities.entrySet()) {
+            int si = entry.getKey();
+            if (!entry.getValue().isEmpty()) {
+                for (Entity other : entry.getValue()) {
+                    for (CustomLimit limit : getCustomLimit(other.getType())) {
+                        if (limit.isExclusive() && other.getType() != entity.getType()) continue;
+                        if (si == chunkY && limit.countSectionLimit()) return true;
+                        if (limit.countChunkLimit()) return true;
+                    }
                 }
             }
         }
@@ -281,11 +284,14 @@ public class EntitySectionLimiter implements Listener {
         switch (type) {
             case PLAYER: // Skip players
 
+            case BLOCK_DISPLAY: // Skip displays
+            case INTERACTION:
+            case ITEM_DISPLAY:
+            case TEXT_DISPLAY:
+
             case ENDER_DRAGON: // Skip bosses
-            case COMPLEX_PART:
 
             case ARROW: // Skip arrows
-            case TIPPED_ARROW:
             case SPECTRAL_ARROW:
 
             case EGG: // Skip throwable
@@ -293,7 +299,6 @@ public class EntitySectionLimiter implements Listener {
             case ENDER_PEARL:
             case ENDER_SIGNAL:
             case SPLASH_POTION:
-            case LINGERING_POTION:
             case THROWN_EXP_BOTTLE:
             case FIREBALL:
             case SMALL_FIREBALL:
@@ -305,15 +310,14 @@ public class EntitySectionLimiter implements Listener {
             case EVOKER_FANGS:
             case LLAMA_SPIT:
             case LIGHTNING:
-            case WEATHER:
             case FISHING_HOOK:
             case LEASH_HITCH:
                 return true;
         }
 
         if (this.ignoredEntities.contains(type)) return true;
-        if (this.ignoreNamed && entity.getCustomName() != null) return true;
-        if (this.ignoreTamed && entity instanceof Tameable && ((Tameable) entity).isTamed()) return true;
+        if (this.ignoreNamed && entity.customName() != null) return true;
+        if (this.ignoreTamed && entity instanceof Tameable tameable && tameable.isTamed()) return true;
 
         return false;
     }

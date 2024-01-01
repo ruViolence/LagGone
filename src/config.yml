@@ -2,6 +2,7 @@ entity-section-limiter:
   limit-per-section: 128
   ignore-named: true
   ignore-tamed: true
+  remove-strategy: 0
   ignored-entity:
     - ELDER_GUARDIAN
     - VILLAGER
@@ -9,6 +10,7 @@ entity-section-limiter:
     - SNOWMAN
     - PAINTING
     - ITEM_FRAME
+    - GLOW_ITEM_FRAME
     - PRIMED_TNT
     - FALLING_BLOCK
     - ARMOR_STAND
@@ -23,22 +25,13 @@ entity-section-limiter:
       exclusive: false
       limit-section: 5
       limit-chunk: 15
-entity-tick-limiter:
-  enabled: true
-  skip-period: 3
-  entity-types:
-    - ARMOR_STAND
-    - PAINTING
-    - ITEM_FRAME
 global-redstone-limiter:
   enabled: true
   tick-length: 5
   limit: 1024
-delete-empty-chunk-sections: true
 prevent-entity-portal:
   - SNOWBALL
 tile-entity-limiter:
   enabled: true
-  notify-block-remove: true
   limit: 128
   period: 1200
