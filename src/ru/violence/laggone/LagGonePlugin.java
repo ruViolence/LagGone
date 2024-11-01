@@ -1,6 +1,7 @@
 package ru.violence.laggone;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import ru.violence.laggone.listener.EntityRemover;
 import ru.violence.laggone.listener.EntitySectionLimiter;
 import ru.violence.laggone.listener.GlobalRedstoneLimiter;
 import ru.violence.laggone.listener.PreventEntityPortal;
@@ -14,5 +15,6 @@ public class LagGonePlugin extends JavaPlugin {
         new GlobalRedstoneLimiter(this);
         new TileEntityLimiter(this);
         new PreventEntityPortal(this);
+        new EntityRemover(this);
     }
 }
