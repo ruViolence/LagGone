@@ -207,9 +207,18 @@ public class EntitySectionLimiter implements Listener {
         if (oldChunkX == newChunkX && oldChunkY == newChunkY && oldChunkZ == newChunkZ) return;
 
         LivingEntity entity = event.getEntity();
-        if (isSensitiveEntity(entity)) return;
-
         World world = to.getWorld();
+        if (isSensitiveEntity(entity)) {
+            // Never limited, but the custom limits count it wherever it stands
+            if (!this.customTypeIndex.isEmpty()) {
+                int type = customTypeIndex(entity.getType());
+                if (type >= 0 && entity.isValid()) {
+                    moveUnchecked(world, oldChunkX, oldChunkY, oldChunkZ, newChunkX, newChunkY, newChunkZ, type);
+                }
+            }
+            return;
+        }
+
         boolean sameChunk = oldChunkX == newChunkX && oldChunkZ == newChunkZ;
         // A chunk scan lists only entities that are alive, so a dying mover is not counted in its new section
         boolean counted = entity.isValid();
@@ -394,6 +403,18 @@ public class EntitySectionLimiter implements Listener {
         }
 
         return census;
+    }
+
+    // A sensitive entity of a custom-limited type moved: the censuses taken this tick held it where it came from
+    private void moveUnchecked(World world, int oldChunkX, int oldChunkY, int oldChunkZ, int newChunkX, int newChunkY, int newChunkZ, int type) {
+        if (this.censusTick != Bukkit.getCurrentTick()) return; // None taken yet this tick: the kept ones are older
+
+        Long2ObjectOpenHashMap<SectionCensus> chunks = this.censuses.get(world);
+        if (chunks == null) return;
+        SectionCensus left = chunks.get(chunkKey(oldChunkX, oldChunkZ));
+        if (left != null) left.add(oldChunkY, false, type, -1);
+        SectionCensus entered = chunks.get(chunkKey(newChunkX, newChunkZ));
+        if (entered != null) entered.add(newChunkY, false, type, 1);
     }
 
     // The entity no longer stands in the section it came from
