@@ -36,8 +36,10 @@ tile-entity-limiter:
   limit: 128
   period: 1200
 entity-remover:
-  enabled: true
+  enabled: false
   types:
     - FIREBALL
     - SMALL_FIREBALL
     - WITHER_SKULL
+item-drop-rate-limiter:
+  enabled: false

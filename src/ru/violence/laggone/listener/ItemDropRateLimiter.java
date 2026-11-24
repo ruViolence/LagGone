@@ -27,6 +27,8 @@ public class ItemDropRateLimiter implements Listener {
 
     public ItemDropRateLimiter(LagGonePlugin plugin) {
         this.plugin = plugin;
+        if (!plugin.getConfig().getBoolean("item-drop-rate-limiter.enabled")) return;
+
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
